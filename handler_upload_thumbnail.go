@@ -9,7 +9,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/bootdotdev/learn-file-storage-s3-golang-starter/internal/auth"
+	"github.com/cyberis/learn-file-storage-s3-golang/internal/auth"
 	"github.com/google/uuid"
 )
 

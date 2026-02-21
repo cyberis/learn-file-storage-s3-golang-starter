@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/bootdotdev/learn-file-storage-s3-golang-starter/internal/database"
+	"github.com/cyberis/learn-file-storage-s3-golang/internal/database"
 
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"

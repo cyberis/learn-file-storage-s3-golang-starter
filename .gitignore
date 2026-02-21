@@ -1,5 +1,5 @@
 out
-learn-file-storage-s3-golang-starter
+learn-file-storage-s3-golang
 *.db
 .env
 assets/
