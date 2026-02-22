@@ -25,6 +25,8 @@ func mediaTypeToExt(mediaType string) (string, error) {
 		return ".png", nil
 	case "image/gif":
 		return ".gif", nil
+	case "video/mp4":
+		return ".mp4", nil
 	default:
 		return "", fmt.Errorf("unsupported media type: %s", mediaType)
 	}
@@ -56,4 +58,8 @@ func (cfg apiConfig) getAssetURL(r *http.Request, assetFilename string) string {
 		scheme = "https"
 	}
 	return fmt.Sprintf("%s://%s/assets/%s", scheme, r.Host, assetFilename)
+}
+
+func (cfg apiConfig) getS3AssetURL(assetFilename string) string {
+	return fmt.Sprintf("https://%s.s3.%s.amazonaws.com/%s", cfg.s3Bucket, cfg.s3Region, assetFilename)
 }
