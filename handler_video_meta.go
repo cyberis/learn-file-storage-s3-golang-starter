@@ -95,6 +95,13 @@ func (cfg *apiConfig) handlerVideoGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Get the signed URL for the video to return in the response - Temporrary code for Chapter 6, Lesson 6: Signed URLs -- Will be removed in Chapter 7, Lesson 3 Use CloudFront
+	video, err = cfg.dbVideoToSignedVideo(video)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Couldn't generate signed URL for video", err)
+		return
+	}
+
 	respondWithJSON(w, http.StatusOK, video)
 }
 
@@ -114,6 +121,15 @@ func (cfg *apiConfig) handlerVideosRetrieve(w http.ResponseWriter, r *http.Reque
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "Couldn't retrieve videos", err)
 		return
+	}
+
+	// Get the signed URL for each video to return in the response - Temporrary code for Chapter 6, Lesson 6: Signed URLs -- Will be removed in Chapter 7, Lesson 3 Use CloudFront
+	for i, video := range videos {
+		videos[i], err = cfg.dbVideoToSignedVideo(video)
+		if err != nil {
+			respondWithError(w, http.StatusInternalServerError, "Couldn't generate signed URL for video", err)
+			return
+		}
 	}
 
 	respondWithJSON(w, http.StatusOK, videos)

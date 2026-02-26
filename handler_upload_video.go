@@ -149,11 +149,21 @@ func (cfg *apiConfig) handlerUploadVideo(w http.ResponseWriter, r *http.Request)
 	// Create the S3 URL for the video
 	videoURL := cfg.getS3AssetURL(filekey)
 
+	// This is termporary code for Chapter 6, Lesson 6: Signed URLs -- Will be removed in Chapter 7, Lesson 3 Use CloudFront
+	videoURL = fmt.Sprintf("%s,%s", cfg.s3Bucket, filekey)
+
 	// Update the video record with the video URL
 	video.VideoURL = &videoURL
 	err = cfg.db.UpdateVideo(video)
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "Couldn't update video record with S3 URL", err)
+		return
+	}
+
+	// Get the signed URL for the video to return in the response - Temporrary code for Chapter 6, Lesson 6: Signed URLs -- Will be removed in Chapter 7, Lesson 3 Use CloudFront
+	video, err = cfg.dbVideoToSignedVideo(video)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Couldn't generate signed URL for video", err)
 		return
 	}
 

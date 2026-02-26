@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"crypto/rand"
 	"encoding/base64"
 	"encoding/json"
@@ -11,6 +12,13 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
+	"time"
+
+	"github.com/cyberis/learn-file-storage-s3-golang/internal/database"
+
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 )
 
 type ffprobeOutput struct {
@@ -199,4 +207,36 @@ func (cfg apiConfig) processVideoForFastStart(filePath string) (string, error) {
 		return "", fmt.Errorf("failed to run ffmpeg for fast start optimization: %v\nOutput: %s\nError: %s", err, out.String(), stderr.String())
 	}
 	return faststartFilePath, nil
+}
+
+func generatePresignedURL(s3Client *s3.Client, bucket, key string, expireTime time.Duration) (string, error) {
+	presignClient := s3.NewPresignClient(s3Client)
+	req, err := presignClient.PresignGetObject(context.TODO(), &s3.GetObjectInput{
+		Bucket: aws.String(bucket),
+		Key:    aws.String(key),
+	}, s3.WithPresignExpires(expireTime))
+	if err != nil {
+		return "", fmt.Errorf("failed to generate presigned URL: %v", err)
+	}
+	return req.URL, nil
+}
+
+func (cfg *apiConfig) dbVideoToSignedVideo(video database.Video) (database.Video, error) {
+	if video.VideoURL == nil {
+		return video, nil
+	}
+
+	// The VideoURL field currently contains the S3 bucket and key in the format "bucket,key" - this is temporary until we implement CloudFront in Chapter 7, Lesson 3
+	parts := strings.Split(*video.VideoURL, ",")
+	if len(parts) != 2 {
+		return video, fmt.Errorf("invalid VideoURL format: %s", *video.VideoURL)
+	}
+	bucket := parts[0]
+	key := parts[1]
+	signedURL, err := generatePresignedURL(cfg.s3Client, bucket, key, 15*time.Minute)
+	if err != nil {
+		return video, fmt.Errorf("failed to generate signed URL for video: %v", err)
+	}
+	video.VideoURL = &signedURL
+	return video, nil
 }
